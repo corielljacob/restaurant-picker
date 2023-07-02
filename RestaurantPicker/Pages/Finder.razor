@@ -68,7 +68,7 @@
 
     private async Task<List<MongoDatum>> RetrieveRestaurants(HttpClient client)
     {
-        MongoClient dbClient = new MongoClient(Environment.GetEnvironmentVariable("MONGODB-DISCORDBOT-DB-CONNECTION-STRING"));
+        MongoClient dbClient = new MongoClient(Environment.GetEnvironmentVariable("MONGODB_DISCORDBOT_DB_CONNECTION_STRING"));
         var restaurantDocuments = await dbClient.GetDatabase("Restaurants")
                                                 .GetCollection<BsonDocument>("Restaurants")
                                                 .Find(new BsonDocument())
