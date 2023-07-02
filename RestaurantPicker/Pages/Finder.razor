@@ -1,0 +1,85 @@
+﻿@page "/finder"
+@using System.Text.Json;
+@using System.Text;
+@using MongoDB.Bson;
+@using MongoDB.Bson.Serialization;
+@using MongoDB.Driver;
+@using Newtonsoft.Json;
+@using RestaurantData.DTOs;
+<h3>Filters</h3>
+
+<FluentSwitch @bind-Value=VegetarianFriendly style="margin-inline-end: 12px;">Vegetarian Friendly</FluentSwitch>
+<FluentSwitch @bind-Value=VeganFriendly style="margin-inline-end: 12px;">Vegan Friendly</FluentSwitch>
+
+<br /> <br />
+<b><FluentDivider/></b>
+<br />
+
+<h3>Search</h3>
+<FluentButton Appearance=Appearance.Outline @onclick="() => SearchRestuarant()">Find Restaurant</FluentButton>
+<br /> <br />
+<p role="status"><b>Name:</b> @Name</p>
+<p role="status"><b>Review Score: </b>@Review</p>
+
+@if (Loading)
+{
+    <FluentProgressRing></FluentProgressRing>
+}
+
+@code {
+    public string Name { get; set;  }
+    public string Review { get; set; }
+    static HttpClient client { get; set; }
+
+    public bool VegetarianFriendly { get; set; }
+    public bool VeganFriendly { get; set; }
+    public bool Loading { get; set; }
+
+    public List<MongoDatum> RestaurantMasterList { get; set; }
+
+    private async Task SearchRestuarant()
+    {
+        Loading = true;
+        RestaurantMasterList = await RetrieveRestaurants(client);
+        var filteredRestaurants = FilterByCuisine(RestaurantMasterList);
+
+        Random randomNumberGenerator = new Random();
+        var randomRestaurant = filteredRestaurants[randomNumberGenerator.Next(filteredRestaurants.Count)];
+
+        Name = randomRestaurant.name;
+        Review = randomRestaurant.rating;
+        Loading = false;
+    }
+
+    private List<MongoDatum> FilterByCuisine(List<MongoDatum> restaurants)
+    {
+        var filteredRestaurants = new List<MongoDatum>();
+        if(VegetarianFriendly)
+            filteredRestaurants.AddRange(restaurants.Where(r => r.cuisine.Any(c => c.name.Equals("Vegetarian Friendly"))).ToList());
+
+        if(VeganFriendly)
+            restaurants.AddRange(restaurants.Where(r => r.cuisine.Any(c => c.name.Equals("Vegan Options"))).ToList());
+
+        if (filteredRestaurants.Count == 0)
+            return restaurants;
+        else
+            return filteredRestaurants;
+    }
+
+    private async Task<List<MongoDatum>> RetrieveRestaurants(HttpClient client)
+    {
+        MongoClient dbClient = new MongoClient(Environment.GetEnvironmentVariable("MONGODB-DISCORDBOT-DB-CONNECTION-STRING"));
+        var restaurantDocuments = await dbClient.GetDatabase("Restaurants")
+                                                .GetCollection<BsonDocument>("Restaurants")
+                                                .Find(new BsonDocument())
+                                                .ToListAsync();
+
+        var restaurantList = new List<MongoDatum>();
+        foreach (var restaurantDocument in restaurantDocuments)
+        {
+            restaurantList.Add(BsonSerializer.Deserialize<MongoDatum>(restaurantDocument));
+        }
+
+        return restaurantList;
+    }
+}

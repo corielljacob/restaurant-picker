@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RestaurantSearcher": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7221"
+    }
+  }
+}
