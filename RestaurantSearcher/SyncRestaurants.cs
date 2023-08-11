@@ -42,12 +42,12 @@ namespace RestaurantSearcher
             restaurants.AddRange(await GetRestaurants(client, TULSA));
             var jenksRestaurants = await GetRestaurants(client, JENKS);
             restaurants.AddRange(jenksRestaurants.Where(jr => !restaurants.Any(tr => tr.location_id == jr.location_id)));
-            SyncMongo(restaurants);
+            await SyncMongo(restaurants);
 
             return new OkObjectResult("OK");
         }
 
-        private static async void SyncMongo(List<Datum> apiRestaurants)
+        private static async Task SyncMongo(List<Datum> apiRestaurants)
         {
             // Bonus points: if restaurant exists in mongo but not the api, delete from mongo (restaurant closed)
             MongoClient dbClient = new MongoClient(Environment.GetEnvironmentVariable("MONGODB-DISCORDBOT-DB-CONNECTION-STRING"));
