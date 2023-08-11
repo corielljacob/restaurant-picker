@@ -55,7 +55,6 @@
 
     public async Task SearchRestaurant()
     {
-        RestaurantsExist = false;
         Loading = true;
         RestaurantMasterList = await FinderService.GetMasterList();
 
