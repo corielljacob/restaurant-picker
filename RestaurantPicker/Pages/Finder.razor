@@ -72,13 +72,16 @@
 
     private List<MongoDatum> FilterByCuisine(List<MongoDatum> restaurants)
     {
+        if(!VegetarianFriendly && !VeganFriendly)
+            return restaurants;
+
         var filteredRestaurants = new List<MongoDatum>();
 
         if(VegetarianFriendly)
             filteredRestaurants.AddRange(restaurants.Where(r => r.cuisine.Any(c => c.name.Equals("Vegetarian Friendly"))).ToList());
 
         if(VeganFriendly)
-            restaurants.AddRange(restaurants.Where(r => r.cuisine.Any(c => c.name.Equals("Vegan Options"))).ToList());
+            filteredRestaurants.AddRange(restaurants.Where(r => r.cuisine.Any(c => c.name.Equals("Vegan Options"))).ToList());
 
         if (filteredRestaurants.Count == 0)
         {
