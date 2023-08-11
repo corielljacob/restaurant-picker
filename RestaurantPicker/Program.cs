@@ -19,7 +19,6 @@ namespace RestaurantPicker
             builder.Services.AddSingleton<FinderService>();
 
             var app = builder.Build();
-
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
