@@ -14,6 +14,12 @@
 <FluentSwitch @bind-Value=VegetarianFriendly style="margin-inline-end: 12px;">Vegetarian Friendly</FluentSwitch>
 <FluentSwitch @bind-Value=VeganFriendly style="margin-inline-end: 12px;">Vegan Friendly</FluentSwitch>
 
+<FluentDialog Hidden=@RestaurantsExist>
+    <h1>Warning</h1>
+    <p>The filter options you have chosen do not have any matches. Please adjust your search settings and search again.</p>
+    <FluentButton @onclick="() => RestaurantsExist = true">OK</FluentButton>
+</FluentDialog>
+
 <br /> <br />
 <b><FluentDivider/></b>
 <br />
@@ -22,6 +28,8 @@
 <FluentButton Appearance=Appearance.Outline @onclick="() => SearchRestaurant()">Find Restaurant</FluentButton>
 <br /> <br />
 <p role="status"><b>Name:</b> @Name</p>
+<p role="status"><b>Cuisine:</b> @Cuisine</p>
+<p role="status"><b>Dining Experience:</b> @DiningExperience</p>
 <p role="status"><b>Review Score: </b>@Review</p>
 
 @if (Loading)
@@ -32,38 +40,40 @@
 @code {
     public string Name { get; set;  }
     public string Review { get; set; }
+    public string Cuisine { get; set; }
+    public string DiningExperience { get; set; }
     static HttpClient client { get; set; }
 
     public bool VegetarianFriendly { get; set; }
     public bool VeganFriendly { get; set; }
     public bool Loading { get; set; }
+    public bool RestaurantsExist { get; set; } = true;
 
-    private readonly IMemoryCache _memoryCache;
+    private static readonly String OutOfFive = " / 5";
 
     public List<MongoDatum> RestaurantMasterList { get; set; }
 
     public async Task SearchRestaurant()
     {
+        RestaurantsExist = false;
         Loading = true;
         RestaurantMasterList = await FinderService.GetMasterList();
 
         var filteredRestaurants = FilterByCuisine(RestaurantMasterList);
 
+        if (filteredRestaurants is null)
+            return;
+
         Random randomNumberGenerator = new Random();
         var randomRestaurant = filteredRestaurants[randomNumberGenerator.Next(filteredRestaurants.Count)];
 
-        Name = randomRestaurant.name;
-        Review = randomRestaurant.rating;
+        PopulateUI(randomRestaurant);
         Loading = false;
     }
 
     private List<MongoDatum> FilterByCuisine(List<MongoDatum> restaurants)
     {
         var filteredRestaurants = new List<MongoDatum>();
-
-        // Cache the master list of restaurants
-        if (RestaurantMasterList == null)
-            RestaurantMasterList = restaurants;
 
         if(VegetarianFriendly)
             filteredRestaurants.AddRange(restaurants.Where(r => r.cuisine.Any(c => c.name.Equals("Vegetarian Friendly"))).ToList());
@@ -72,10 +82,44 @@
             restaurants.AddRange(restaurants.Where(r => r.cuisine.Any(c => c.name.Equals("Vegan Options"))).ToList());
 
         if (filteredRestaurants.Count == 0)
-            return restaurants;
+        {
+            RestaurantsExist = false;
+            return null;
+        }
         else
             return filteredRestaurants;
     }
 
-    
+    private void PopulateUI(MongoDatum randomRestaurant)
+    {
+        Name = randomRestaurant.name;
+
+        if (randomRestaurant.rating is null)
+            Review = "Unknown";
+        else
+            Review = $"{randomRestaurant.rating}".Trim() + OutOfFive;
+        
+        var cuisine = FlattenStrings(randomRestaurant.cuisine.Select(c => c.name).ToList());
+        if (cuisine.Length == 0)
+            Cuisine = "Unknown";
+        else
+            Cuisine = cuisine;
+
+        var diningExperience = FlattenStrings(randomRestaurant.subcategory.Select(s => s.name).ToList());
+        if (diningExperience.Length == 0)
+            DiningExperience = "Unknown";
+        else
+            DiningExperience = diningExperience;
+    }
+
+    public string FlattenStrings(List<String> stringList)
+    {
+        var flattenedString = new StringBuilder();
+        foreach (var s in stringList)
+        {
+            flattenedString.Append(s);
+            flattenedString.Append(", ");
+        }
+        return flattenedString.ToString().Trim().Trim(',');
+    }
 }
