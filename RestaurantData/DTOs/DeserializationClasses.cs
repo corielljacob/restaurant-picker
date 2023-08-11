@@ -51,7 +51,7 @@ namespace RestaurantData.DTOs
         public string location_string { get; set; }
         public Photo photo { get; set; }
         public string api_detail_url { get; set; }
-        public List<Award>? awards { get; set; }
+        public List<Award> awards { get; set; }
         public string doubleclick_zone { get; set; }
         public string preferred_map_engine { get; set; }
         public string raw_ranking { get; set; }
@@ -77,7 +77,7 @@ namespace RestaurantData.DTOs
         public List<Subcategory> subcategory { get; set; }
         public string parent_display_name { get; set; }
         public bool is_jfy_enabled { get; set; }
-        public List<NearestMetroStation>? nearest_metro_station { get; set; }
+        public List<NearestMetroStation> nearest_metro_station { get; set; }
         public string phone { get; set; }
         public string website { get; set; }
         public string email { get; set; }
@@ -101,7 +101,7 @@ namespace RestaurantData.DTOs
         public string location_string { get; set; }
         public Photo photo { get; set; }
         public string api_detail_url { get; set; }
-        public List<Award>? awards { get; set; }
+        public List<Award> awards { get; set; }
         public string doubleclick_zone { get; set; }
         public string preferred_map_engine { get; set; }
         public string raw_ranking { get; set; }
@@ -127,7 +127,7 @@ namespace RestaurantData.DTOs
         public List<Subcategory> subcategory { get; set; }
         public string parent_display_name { get; set; }
         public bool is_jfy_enabled { get; set; }
-        public List<NearestMetroStation>? nearest_metro_station { get; set; }
+        public List<NearestMetroStation> nearest_metro_station { get; set; }
         public string phone { get; set; }
         public string website { get; set; }
         public string email { get; set; }

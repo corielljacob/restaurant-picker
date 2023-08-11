@@ -1,11 +1,14 @@
 ﻿@page "/finder"
 @using System.Text.Json;
 @using System.Text;
+@using Microsoft.Extensions.Caching.Memory;
 @using MongoDB.Bson;
 @using MongoDB.Bson.Serialization;
 @using MongoDB.Driver;
 @using Newtonsoft.Json;
 @using RestaurantData.DTOs;
+@using RestaurantData.Services;
+@inject FinderService FinderService
 <h3>Filters</h3>
 
 <FluentSwitch @bind-Value=VegetarianFriendly style="margin-inline-end: 12px;">Vegetarian Friendly</FluentSwitch>
@@ -16,7 +19,7 @@
 <br />
 
 <h3>Search</h3>
-<FluentButton Appearance=Appearance.Outline @onclick="() => SearchRestuarant()">Find Restaurant</FluentButton>
+<FluentButton Appearance=Appearance.Outline @onclick="() => SearchRestaurant()">Find Restaurant</FluentButton>
 <br /> <br />
 <p role="status"><b>Name:</b> @Name</p>
 <p role="status"><b>Review Score: </b>@Review</p>
@@ -35,12 +38,15 @@
     public bool VeganFriendly { get; set; }
     public bool Loading { get; set; }
 
+    private readonly IMemoryCache _memoryCache;
+
     public List<MongoDatum> RestaurantMasterList { get; set; }
 
-    private async Task SearchRestuarant()
+    public async Task SearchRestaurant()
     {
         Loading = true;
-        RestaurantMasterList = await RetrieveRestaurants(client);
+        RestaurantMasterList = await FinderService.GetMasterList();
+
         var filteredRestaurants = FilterByCuisine(RestaurantMasterList);
 
         Random randomNumberGenerator = new Random();
@@ -54,6 +60,11 @@
     private List<MongoDatum> FilterByCuisine(List<MongoDatum> restaurants)
     {
         var filteredRestaurants = new List<MongoDatum>();
+
+        // Cache the master list of restaurants
+        if (RestaurantMasterList == null)
+            RestaurantMasterList = restaurants;
+
         if(VegetarianFriendly)
             filteredRestaurants.AddRange(restaurants.Where(r => r.cuisine.Any(c => c.name.Equals("Vegetarian Friendly"))).ToList());
 
@@ -66,20 +77,5 @@
             return filteredRestaurants;
     }
 
-    private async Task<List<MongoDatum>> RetrieveRestaurants(HttpClient client)
-    {
-        MongoClient dbClient = new MongoClient(Environment.GetEnvironmentVariable("MONGODB_DISCORDBOT_DB_CONNECTION_STRING"));
-        var restaurantDocuments = await dbClient.GetDatabase("Restaurants")
-                                                .GetCollection<BsonDocument>("Restaurants")
-                                                .Find(new BsonDocument())
-                                                .ToListAsync();
-
-        var restaurantList = new List<MongoDatum>();
-        foreach (var restaurantDocument in restaurantDocuments)
-        {
-            restaurantList.Add(BsonSerializer.Deserialize<MongoDatum>(restaurantDocument));
-        }
-
-        return restaurantList;
-    }
+    
 }

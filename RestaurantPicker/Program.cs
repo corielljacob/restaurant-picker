@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using RestaurantData.Services;
 
 namespace RestaurantPicker
 {
@@ -12,6 +13,7 @@ namespace RestaurantPicker
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
+            builder.Services.AddSingleton<FinderService>();
 
             var app = builder.Build();
 
